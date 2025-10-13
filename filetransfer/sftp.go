@@ -3,7 +3,7 @@ package filetransfer
 import (
 	"encoding/csv"
 	"fmt"
-	"net"
+	"os"
 	"path/filepath"
 
 	"github.com/companieshouse/chs.go/log"
@@ -22,14 +22,47 @@ type SFTP struct {
 // New returns a new SFTP struct using the provided config
 func New(cfg *config.Config) *SFTP {
 
+	var authMethods []ssh.AuthMethod
+
+	if cfg.SFTPPrivateKeyPath != "" {
+		key, err := os.ReadFile(cfg.SFTPPrivateKeyPath)
+		if err != nil {
+			log.Error(fmt.Errorf("unable to read private key file: %s", err), nil)
+		} else {
+			signer, err := ssh.ParsePrivateKey(key)
+			if err != nil {
+				log.Error(fmt.Errorf("unable to parse private key: %s", err), nil)
+			} else {
+				authMethods = append(authMethods, ssh.PublicKeys(signer))
+				log.Info("Using private key authentication from path: " + cfg.SFTPPrivateKeyPath)
+			}
+		}
+	}
+
+	if len(authMethods) == 0 && cfg.SFTPPrivateKey != "" {
+		signer, err := ssh.ParsePrivateKey([]byte(cfg.SFTPPrivateKey))
+		if err != nil {
+			log.Error(fmt.Errorf("unable to parse private key from env: %s", err), nil)
+		} else {
+			authMethods = append(authMethods, ssh.PublicKeys(signer))
+			log.Info("Using private key authentication from environment variable")
+		}
+	}
+
+	if len(authMethods) == 0 && cfg.SFTPPassword != "" {
+		authMethods = append(authMethods, ssh.Password(cfg.SFTPPassword))
+		log.Info("Using password authentication (fallback)")
+	}
+
+	if len(authMethods) == 0 {
+		log.Error(fmt.Errorf("no authentication methods available"), nil)
+		return nil
+	}
+
 	sshCfg := &ssh.ClientConfig{
-		User: cfg.SFTPUserName,
-		HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
-			return nil
-		},
-		Auth: []ssh.AuthMethod{
-			ssh.Password(cfg.SFTPPassword),
-		},
+		User:            cfg.SFTPUserName,
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+		Auth:            authMethods,
 	}
 
 	sshCfg.SetDefaults()
