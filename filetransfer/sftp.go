@@ -3,7 +3,6 @@ package filetransfer
 import (
 	"encoding/csv"
 	"fmt"
-	"net"
 	"os"
 	"path/filepath"
 
@@ -55,12 +54,15 @@ func New(cfg *config.Config) *SFTP {
 		log.Info("Using password authentication (fallback)")
 	}
 
+	if len(authMethods) == 0 {
+		log.Error(fmt.Errorf("no authentication methods available"), nil)
+		return nil
+	}
+
 	sshCfg := &ssh.ClientConfig{
-		User: cfg.SFTPUserName,
-		HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
-			return nil
-		},
-		Auth: authMethods,
+		User:            cfg.SFTPUserName,
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+		Auth:            authMethods,
 	}
 
 	sshCfg.SetDefaults()
