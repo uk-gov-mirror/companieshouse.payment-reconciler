@@ -23,6 +23,8 @@ const (
 	SFTPPORTKEYCONST             = `SFTP_PORT`
 	SFTPUSERNAMEKEYCONST         = `SFTP_USERNAME`
 	SFTPPASSWORDKEYCONST         = `SFTP_PASSWORD`
+	SFTPPRIVATEKEYCONST          = `SFTP_PRIVATE_KEY`
+	SFTPPRIVATEKEYPATHCONST      = `SFTP_PRIVATE_KEY_PATH`
 	SFTPFILEPATHKEYCONST         = `SFTP_FILE_PATH`
 )
 
@@ -37,6 +39,8 @@ const (
 	sftpPortConst              = `sftp-port`
 	sftpUserNameConst          = `sftp-username`
 	sftpPasswordConst          = `sftp-password`
+	sftpPrivateKeyConst        = `-----BEGIN RSA PRIVATE KEY-----\ntest-private-key\n-----END RSA PRIVATE KEY-----`
+	sftpPrivateKeyPathConst    = `/path/to/private/key`
 	sftpFilePathConst          = `sftp-file-path`
 	nameConst                  = `chs-log-test`
 	namespaceConst             = `chs-namespace-test`
@@ -59,6 +63,8 @@ func TestConfig(t *testing.T) {
 			SFTPPORTKEYCONST:             sftpPortConst,
 			SFTPUSERNAMEKEYCONST:         sftpUserNameConst,
 			SFTPPASSWORDKEYCONST:         sftpPasswordConst,
+			SFTPPRIVATEKEYCONST:          sftpPrivateKeyConst,
+			SFTPPRIVATEKEYPATHCONST:      sftpPrivateKeyPathConst,
 			SFTPFILEPATHKEYCONST:         sftpFilePathConst,
 		}
 		builtConfig = config.Config{
@@ -71,13 +77,17 @@ func TestConfig(t *testing.T) {
 			SFTPPort:               sftpPortConst,
 			SFTPUserName:           sftpUserNameConst,
 			SFTPPassword:           sftpPasswordConst,
+			SFTPPrivateKey:         sftpPrivateKeyConst,
+			SFTPPrivateKeyPath:     sftpPrivateKeyPathConst,
 			SFTPFilePath:           sftpFilePathConst,
 		}
-		sftpUserNameRegex = regexp.MustCompile(sftpUserNameConst)
-		sftpPasswordRegex = regexp.MustCompile(sftpPasswordConst)
-		mongoDbUrlRegex   = regexp.MustCompile(mongoDbUrlConst)
-		sftpServerRegex   = regexp.MustCompile(sftpServerConst)
-		sftpFilePathRegex = regexp.MustCompile(sftpFilePathConst)
+		sftpUserNameRegex       = regexp.MustCompile(sftpUserNameConst)
+		sftpPasswordRegex       = regexp.MustCompile(sftpPasswordConst)
+		sftpPrivateKeyRegex     = regexp.MustCompile(`test-private-key`)
+		sftpPrivateKeyPathRegex = regexp.MustCompile(regexp.QuoteMeta(sftpPrivateKeyPathConst))
+		mongoDbUrlRegex         = regexp.MustCompile(mongoDbUrlConst)
+		sftpServerRegex         = regexp.MustCompile(sftpServerConst)
+		sftpFilePathRegex       = regexp.MustCompile(sftpFilePathConst)
 	)
 
 	// set test env variables
@@ -107,6 +117,8 @@ func TestConfig(t *testing.T) {
 				So(err, ShouldBeNil)
 				So(sftpUserNameRegex.Match(jsonByte), ShouldEqual, false)
 				So(sftpPasswordRegex.Match(jsonByte), ShouldEqual, false)
+				So(sftpPrivateKeyRegex.Match(jsonByte), ShouldEqual, false)
+				So(sftpPrivateKeyPathRegex.Match(jsonByte), ShouldEqual, false)
 				So(mongoDbUrlRegex.Match(jsonByte), ShouldEqual, false)
 				So(sftpServerRegex.Match(jsonByte), ShouldEqual, false)
 				So(sftpFilePathRegex.Match(jsonByte), ShouldEqual, false)
