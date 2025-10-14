@@ -3,7 +3,6 @@ package filetransfer
 import (
 	"encoding/csv"
 	"fmt"
-	"os"
 	"path/filepath"
 
 	"github.com/companieshouse/chs.go/log"
@@ -20,49 +19,21 @@ type SFTP struct {
 }
 
 // New returns a new SFTP struct using the provided config
-func New(cfg *config.Config) *SFTP {
+func New(cfg *config.Config) (*SFTP, error) {
 
-	var authMethods []ssh.AuthMethod
-
-	if cfg.SFTPPrivateKeyPath != "" {
-		key, err := os.ReadFile(cfg.SFTPPrivateKeyPath)
-		if err != nil {
-			log.Error(fmt.Errorf("unable to read private key file: %s", err), nil)
-		} else {
-			signer, err := ssh.ParsePrivateKey(key)
-			if err != nil {
-				log.Error(fmt.Errorf("unable to parse private key: %s", err), nil)
-			} else {
-				authMethods = append(authMethods, ssh.PublicKeys(signer))
-				log.Info("Using private key authentication from path: " + cfg.SFTPPrivateKeyPath)
-			}
-		}
+	if cfg.SFTPPrivateKey == "" {
+		return nil, fmt.Errorf("no SFTP private key provided")
 	}
 
-	if len(authMethods) == 0 && cfg.SFTPPrivateKey != "" {
-		signer, err := ssh.ParsePrivateKey([]byte(cfg.SFTPPrivateKey))
-		if err != nil {
-			log.Error(fmt.Errorf("unable to parse private key from env: %s", err), nil)
-		} else {
-			authMethods = append(authMethods, ssh.PublicKeys(signer))
-			log.Info("Using private key authentication from environment variable")
-		}
-	}
-
-	if len(authMethods) == 0 && cfg.SFTPPassword != "" {
-		authMethods = append(authMethods, ssh.Password(cfg.SFTPPassword))
-		log.Info("Using password authentication (fallback)")
-	}
-
-	if len(authMethods) == 0 {
-		log.Error(fmt.Errorf("no authentication methods available"), nil)
-		return nil
+	signer, err := ssh.ParsePrivateKey([]byte(cfg.SFTPPrivateKey))
+	if err != nil {
+		return nil, fmt.Errorf("invalid SFTP private key: %w", err)
 	}
 
 	sshCfg := &ssh.ClientConfig{
 		User:            cfg.SFTPUserName,
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-		Auth:            authMethods,
+		Auth:            []ssh.AuthMethod{ssh.PublicKeys(signer)},
 	}
 
 	sshCfg.SetDefaults()
@@ -70,7 +41,7 @@ func New(cfg *config.Config) *SFTP {
 	return &SFTP{
 		Config:          cfg,
 		SSHClientConfig: sshCfg,
-	}
+	}, nil
 }
 
 // UploadCSVFiles uploads an array of CSV's to an STFP server

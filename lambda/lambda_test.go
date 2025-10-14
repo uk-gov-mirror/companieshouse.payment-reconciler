@@ -21,6 +21,51 @@ func createMockLambda(cfg *config.Config, mockService *service.MockService, mock
 	}
 }
 
+func TestUnitNew(t *testing.T) {
+
+	Convey("Subject: New Lambda initialization", t, func() {
+
+		Convey("Given a config without SFTP private key", func() {
+
+			cfg := &config.Config{
+				SFTPPrivateKey: "",
+			}
+
+			Convey("When creating a new Lambda", func() {
+
+				lambda, err := New(cfg)
+
+				Convey("Then an error should be returned", func() {
+					So(err, ShouldNotBeNil)
+					So(err.Error(), ShouldContainSubstring, "failed to initialize file transfer")
+					So(err.Error(), ShouldContainSubstring, "no SFTP private key provided")
+					So(lambda, ShouldBeNil)
+				})
+			})
+		})
+
+		Convey("Given a config with invalid SFTP private key", func() {
+
+			cfg := &config.Config{
+				SFTPPrivateKey: "invalid-key",
+				SFTPUserName:   "testuser",
+			}
+
+			Convey("When creating a new Lambda", func() {
+
+				lambda, err := New(cfg)
+
+				Convey("Then an error should be returned", func() {
+					So(err, ShouldNotBeNil)
+					So(err.Error(), ShouldContainSubstring, "failed to initialize file transfer")
+					So(err.Error(), ShouldContainSubstring, "invalid SFTP private key")
+					So(lambda, ShouldBeNil)
+				})
+			})
+		})
+	})
+}
+
 func TestUnitExecute(t *testing.T) {
 
 	mockCtrl := gomock.NewController(t)

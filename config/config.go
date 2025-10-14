@@ -14,9 +14,7 @@ type Config struct {
 	SFTPServer             string `env:"SFTP_SERVER"                                  flag:"sftp-server"                                   flagDesc:"Name of the SFTP server" json:"-"`
 	SFTPPort               string `env:"SFTP_PORT"                                    flag:"sftp-port"                                     flagDesc:"Port to connect to the SFTP server"`
 	SFTPUserName           string `env:"SFTP_USERNAME"                                flag:"sftp-username"                                 flagDesc:"Username of SFTP server" json:"-"`
-	SFTPPassword           string `env:"SFTP_PASSWORD"                                flag:"sftp-password"                                 flagDesc:"Password of SFTP server" json:"-"`
 	SFTPPrivateKey         string `env:"SFTP_PRIVATE_KEY"                             flag:"sftp-private-key"                              flagDesc:"Private key for SFTP server authentication" json:"-"`
-	SFTPPrivateKeyPath     string `env:"SFTP_PRIVATE_KEY_PATH"                        flag:"sftp-private-key-path"                         flagDesc:"Path to private key file for SFTP server" json:"-"`
 	SFTPFilePath           string `env:"SFTP_FILE_PATH"                               flag:"sftp-file-path"                                flagDesc:"File path on the SFTP server" json:"-"`
 }
 

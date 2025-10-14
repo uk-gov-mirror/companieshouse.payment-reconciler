@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 
 	. "github.com/aws/aws-lambda-go/lambda"
 	"github.com/companieshouse/chs.go/log"
@@ -22,7 +23,11 @@ func main() {
 	log.Trace("Config", log.Data{"Config": cfg})
 	log.Info("Payment reconciliation lambda started")
 
-	reconciliationLambda := lambda.New(cfg)
+	reconciliationLambda, err := lambda.New(cfg)
+	if err != nil {
+		log.Error(fmt.Errorf("error initializing lambda: %s", err), nil)
+		os.Exit(1)
+	}
 
 	Start(reconciliationLambda.Execute)
 }

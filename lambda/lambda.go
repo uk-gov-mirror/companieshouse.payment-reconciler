@@ -1,6 +1,7 @@
 package lambda
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/companieshouse/chs.go/log"
@@ -20,13 +21,19 @@ type Lambda struct {
 }
 
 // New returns a new Lambda using the provided configs
-func New(cfg *config.Config) *Lambda {
+func New(cfg *config.Config) (*Lambda, error) {
+	svc := service.New(cfg)
+
+	ft, err := filetransfer.New(cfg)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize file transfer: %w", err)
+	}
 
 	return &Lambda{
 		Config:       cfg,
-		Service:      service.New(cfg),
-		FileTransfer: filetransfer.New(cfg),
-	}
+		Service:      svc,
+		FileTransfer: ft,
+	}, nil
 }
 
 // Execute handles lambda execution
