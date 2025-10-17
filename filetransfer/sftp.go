@@ -57,6 +57,7 @@ func (t *SFTP) UploadCSVFiles(csvs []models.CSV) error {
 
 	sftpSession, err := sftp.NewClient(client)
 	if err != nil {
+		log.Error(fmt.Errorf("SSH connection failed"))
 		return fmt.Errorf("error creating SFTP session: %s", err)
 	}
 	defer sftpSession.Close()
