@@ -39,7 +39,7 @@ variable "runtime" {
 
 variable "timeout_seconds" {
   type        = string
-  default     = "30"
+  default     = "6"
   description = "The amount of time the Lambda function has to run in seconds."
 }
 
